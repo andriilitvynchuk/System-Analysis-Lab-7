@@ -6,13 +6,11 @@ from PyQt5.Qt import QApplication, QFileDialog, QInputDialog, QMessageBox, QTabl
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QMainWindow
 
-from cognitive_model import CognitiveModel
+from backend.cognitive_model import CognitiveModel
 from main_window import Ui_MainWindow, _translate
 
 
 # Entry point
-app = QApplication(sys.argv)
-app.setApplicationName("Work 8")
 
 
 def to_float(x):
@@ -148,7 +146,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tableWidget.resizeColumnsToContents()
 
 
-mainWindow = MainWindow()
-mainWindow.setWindowTitle("Lab#8 Yaroslavskyi Doroshchuk Barabash Nogol")
-mainWindow.show()
-sys.exit(app.exec_())
+def main():
+    app = QApplication(sys.argv)
+    app.setApplicationName("Work 8")
+    mainWindow = MainWindow()
+    mainWindow.setWindowTitle("Lab#8 Yaroslavskyi Doroshchuk Barabash Nogol")
+    mainWindow.show()
+    sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()

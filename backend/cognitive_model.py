@@ -43,7 +43,6 @@ class CognitiveModel:
         )
         return not negative_count & 0x1
 
-
     def check_structural_stability(self) -> List[List[int]]:
         return [cycle for cycle in nx.simple_cycles(self.graph) if self.is_even(cycle)]
 
