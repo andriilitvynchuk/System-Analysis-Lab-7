@@ -1,8 +1,7 @@
 import sys
-from typing import Any, NoReturn, Optional, Union
+from typing import Any, List, NoReturn, Optional, Union
 
 import numpy as np
-import pandas as pd
 from PyQt5.Qt import QApplication, QFileDialog, QMessageBox, QTableWidgetItem
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QMainWindow
@@ -51,6 +50,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             cognitiveModel = CognitiveModel(A)
             cognitiveModel.draw_graph()
 
+    def cycle_str(self, x: List[int]) -> str:
+        return " - ".join(self.tableWidget.verticalHeaderItem(y).text() for y in x)
+
     @pyqtSlot()
     def researchClicked(self) -> NoReturn:
         A = self.get_A()
@@ -77,10 +79,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not cycles:
             results += "Так"
         else:
-            cycle_str = lambda x: " - ".join(self.tableWidget.verticalHeaderItem(y).text() for y in x)
+            # cycle_str = lambda x: " - ".join(self.tableWidget.verticalHeaderItem(y).text() for y in x)
             results += "Ні, отримали наступні цикли: \n"
             for cycle in cycles:
-                results += "(" + cycle_str(cycle) + ") \n"
+                results += "(" + self.cycle_str(cycle) + ") \n"
         self.label.setText(results)
 
     @pyqtSlot()
