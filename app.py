@@ -1,19 +1,17 @@
 import sys
+from typing import Any, NoReturn, Optional, Union
 
 import numpy as np
 import pandas as pd
-from PyQt5.Qt import QApplication, QFileDialog, QInputDialog, QMessageBox, QTableWidgetItem
-from PyQt5.QtCore import pyqtSignal, pyqtSlot
+from PyQt5.Qt import QApplication, QFileDialog, QMessageBox, QTableWidgetItem
+from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QMainWindow
 
 from backend.cognitive_model import CognitiveModel
 from main_window import Ui_MainWindow, _translate
 
 
-# Entry point
-
-
-def to_float(x):
+def to_float(x: Any) -> Union[None, float]:
     try:
         return float(x)
     except ValueError:
@@ -21,37 +19,40 @@ def to_float(x):
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[Any] = None):
         super(MainWindow, self).__init__(parent)
 
-        # setting up ui
-        self.setupUi(self)
+        try:
+            self.default_adj_matrix = np.loadtxt("./data/ukraine.txt")
+        except OSError:
+            self.default_adj_matrix = np.ones((8, 8))
+        self.row_count, self.col_count = self.default_adj_matrix.shape
+        self.setupUi(self, self.col_count, self.row_count, self.default_adj_matrix)
         self.tableWidget.resizeColumnsToContents()
 
-    def get_A(self):
+    def get_A(self) -> np.ndarray:
         A = []
         for i in range(self.tableWidget.rowCount()):
             A_row = []
             for j in range(self.tableWidget.columnCount()):
                 val = to_float(self.tableWidget.item(i, j).text())
-                if val == None:
+                if val is None:
                     return None
                 A_row.append(val)
             A.append(np.array(A_row))
         return np.array(A)
 
     @pyqtSlot()
-    def buildClicked(self):
+    def buildClicked(self) -> NoReturn:
         A = self.get_A()
         if A is None:
             QMessageBox.warning(self, "Error", "Error parsing matrix")
-            return
-
-        cognitiveModel = CognitiveModel(A)
-        cognitiveModel.draw_graph()
+        else:
+            cognitiveModel = CognitiveModel(A)
+            cognitiveModel.draw_graph()
 
     @pyqtSlot()
-    def researchClicked(self):
+    def researchClicked(self) -> NoReturn:
         A = self.get_A()
         if A is None:
             QMessageBox.warning(self, "Error", "Error parsing matrix")
@@ -59,62 +60,62 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # researching A
         cognitiveModel = CognitiveModel(A)
 
-        results = "Eigenvalues: "
+        results = "Власні числа: "
         results += " ".join(str(x) for x in cognitiveModel.calculate_eigenvalues())
         results += "\n"
 
-        results += "Disturbance stability: "
-        results += "True" if cognitiveModel.check_perturbation_stability() else "False"
+        results += "Стійкість за збуренням: "
+        results += "Так" if cognitiveModel.check_perturbation_stability() else "Ні"
         results += "\n"
 
-        results += "Value stability: "
-        results += "True" if cognitiveModel.check_numerical_stability() else "False"
-        results += "\n"
+        results += "Стійкість за значенням: "
+        results += "Так" if cognitiveModel.check_numerical_stability() else "Ні"
         results += "\n"
 
-        results += "Structural stability: "
+        results += "Структурна стійкість: "
         cycles = cognitiveModel.check_structural_stability()
         if not cycles:
-            results += "True"
+            results += "Так"
         else:
             cycle_str = lambda x: " - ".join(self.tableWidget.verticalHeaderItem(y).text() for y in x)
-            results += "No (" + ", ".join(cycle_str(x) for x in cycles) + ")"
+            results += "Ні, отримали наступні цикли: \n"
+            for cycle in cycles:
+                results += "(" + cycle_str(cycle) + ") \n"
         self.label.setText(results)
 
     @pyqtSlot()
-    def openClicked(self):
-        filename = QFileDialog.getOpenFileName(self, "Відкрити файл з данними", ".", "Data file (*.csv)")
-        if filename == "":
-            return
-        self.openLineEdit.setText(filename[0])
-        df = pd.read_csv(filename[0])
-        self.tableWidget.clear()
+    def openClicked(self) -> NoReturn:
+        filename = QFileDialog.getOpenFileName(self, "Відкрити файл з данними", ".", "Data file (*.txt)")
+        if filename != "":
+            self.openLineEdit.setText(filename[0])
+            df = np.loadtxt(filename[0])
+            self.tableWidget.clear()
 
-        self.tableWidget.setCornerButtonEnabled(False)
-        self.tableWidget.setColumnCount(len(df))
-        self.tableWidget.setRowCount(len(df))
+            self.tableWidget.setCornerButtonEnabled(False)
+            self.tableWidget.setColumnCount(len(df))
+            self.tableWidget.setRowCount(len(df))
 
-        self.tableWidget.setSortingEnabled(False)
+            self.tableWidget.setSortingEnabled(False)
 
-        for i in range(len(df)):
-            item = QTableWidgetItem()
-            self.tableWidget.setVerticalHeaderItem(i, item)
-            item = self.tableWidget.verticalHeaderItem(i)
-            item.setText(_translate("MainWindow", str(i + 1), None))
-
-            item = QTableWidgetItem()
-            self.tableWidget.setHorizontalHeaderItem(i, item)
-
-        for i in range(len(df)):
-            for j in range(len(df)):
+            for i in range(len(df)):
                 item = QTableWidgetItem()
-                item.setText(_translate("MainWindow", str(df.iloc[i, j]), None))
-                self.tableWidget.setItem(i, j, item)
+                self.tableWidget.setVerticalHeaderItem(i, item)
+                item = self.tableWidget.verticalHeaderItem(i)
+                item.setText(_translate("MainWindow", str(i + 1), None))
 
-        self.tableWidget.resizeColumnsToContents()
+                item = QTableWidgetItem()
+                self.tableWidget.setHorizontalHeaderItem(i, item)
+
+            for i in range(len(df)):
+                for j in range(len(df)):
+                    item = QTableWidgetItem()
+                    item.setText(_translate("MainWindow", str(df[i, j]), None))
+                    self.tableWidget.setItem(i, j, item)
+
+            self.tableWidget.resizeColumnsToContents()
 
     @pyqtSlot()
-    def addClicked(self):
+    def addClicked(self) -> NoReturn:
 
         name = str(self.tableWidget.rowCount() + 1)
         r = self.tableWidget.rowCount()
@@ -124,14 +125,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tableWidget.setVerticalHeaderItem(r, QTableWidgetItem(name))
 
         for i in range(r + 1):
-            item = "0"
+            item = "0.0"
             self.tableWidget.setItem(i, r, QTableWidgetItem(item))
             self.tableWidget.setItem(r, i, QTableWidgetItem(item))
 
         self.tableWidget.resizeColumnsToContents()
 
     @pyqtSlot()
-    def removeClicked(self):
+    def removeClicked(self) -> NoReturn:
         selected_items = self.tableWidget.selectedItems()
 
         k = selected_items[0]
@@ -146,11 +147,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tableWidget.resizeColumnsToContents()
 
 
-def main():
+def main() -> NoReturn:
     app = QApplication(sys.argv)
     app.setApplicationName("Work 8")
     mainWindow = MainWindow()
-    mainWindow.setWindowTitle("Lab#8 Yaroslavskyi Doroshchuk Barabash Nogol")
+    mainWindow.setWindowTitle("Когнітивне моделювання")
     mainWindow.show()
     sys.exit(app.exec_())
 
