@@ -7,9 +7,11 @@ from pylab import rcParams
 
 
 class CognitiveModel:
-    def __init__(self, adjacency_matrix: np.ndarray, nodes_names: Optional[Dict[int, str]] = None):
+    def __init__(self, adjacency_matrix: np.ndarray, nodes_names: Optional[Dict[int, Any]] = None):
         self.graph = nx.DiGraph(data=adjacency_matrix)
-        self.nodes_names = nodes_names
+        self.nodes_names = (
+            nodes_names if nodes_names is not None else {key: f"V{key + 1}" for key in range(len(adjacency_matrix))}
+        )
         if nodes_names:
             nx.set_node_attributes(self.graph, "name", nodes_names)
 
@@ -67,24 +69,22 @@ class CognitiveModel:
         plt.title("Когнітивна карта")
         plt.show()
 
+    def impulse_model(self, t: int = 50) -> NoReturn:
+        rcParams["figure.figsize"] = 7, 5
+        x_0 = np.zeros((self.adjacency_matrix.shape[0], 1))
+        init_q = x_0.copy()
+        x_list = [x_0, x_0]
+        q = init_q.copy()
+        q[0] = 1
+        for _ in range(t):
+            x_next = x_list[-1] + np.dot(self.adjacency_matrix, (x_list[-1] - x_list[-2])) + q
+            x_list.append(x_next)
+            q = init_q.copy()
+        x_plot = np.array(x_list[1:])
+        x_plot = x_plot.reshape(x_plot.shape[:2])
 
-# if __name__ == "__main__":
-#     # A  B  C  D  E  F  G  H
-#     matrix = np.array(
-#         [
-#             [0, -1, 1, 0, 0, 1, 0, 0],  # A
-#             [0, 0, 0, 0, 1, 0, 0, 0],  # B
-#             [0, 0, 0, 1, 0, 0, 0, 0],  # C
-#             [1, 0, 0, 0, 0, 0, 0, 1],  # D
-#             [0, 0, 0, 0, 0, 1, 1, 1],  # E
-#             [0, 1, 0, 0, 0, 0, 1, 0],  # F
-#             [0, 0, 0, 0, 0, 0, 0, 0],  # G
-#             [0, 0, 0, 0, 0, 0, -1, 0],
-#         ]  # H
-#     )
-
-#     nodes_names = {0: "Фактор 1", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G", 7: "H"}
-
-#     model = CognitiveModel(matrix, nodes_names=nodes_names)
-#     print(model.check_structural_stability())
-#     model.draw_graph()
+        for index in range(x_plot.shape[1]):
+            plt.plot(range(t + 1), x_plot[:, index], label=f"V{index + 1}")
+        plt.title(f"Графік імпульсних процесів у вершинах внаслідок \n внесення збурення q1 = + 1")
+        plt.legend()
+        plt.show()

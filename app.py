@@ -61,9 +61,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # researching A
         cognitiveModel = CognitiveModel(A)
-
-        results = "Власні числа: "
-        results += " ".join(str(x) for x in cognitiveModel.calculate_eigenvalues())
+        results = "Власні числа: \n"
+        results += "\n".join(str(x) for x in cognitiveModel.calculate_eigenvalues())
         results += "\n"
 
         results += "Стійкість за збуренням: "
@@ -79,10 +78,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not cycles:
             results += "Так"
         else:
-            # cycle_str = lambda x: " - ".join(self.tableWidget.verticalHeaderItem(y).text() for y in x)
             results += "Ні, отримали наступні цикли: \n"
             for cycle in cycles:
                 results += "(" + self.cycle_str(cycle) + ") \n"
+        cognitiveModel.impulse_model()
         self.label.setText(results)
 
     @pyqtSlot()
