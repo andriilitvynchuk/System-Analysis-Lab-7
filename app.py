@@ -58,31 +58,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         A = self.get_A()
         if A is None:
             QMessageBox.warning(self, "Error", "Error parsing matrix")
-
-        # researching A
-        cognitiveModel = CognitiveModel(A)
-        results = "Власні числа: \n"
-        results += "\n".join(str(x) for x in cognitiveModel.calculate_eigenvalues())
-        results += "\n"
-
-        results += "Стійкість за збуренням: "
-        results += "Так" if cognitiveModel.check_perturbation_stability() else "Ні"
-        results += "\n"
-
-        results += "Стійкість за значенням: "
-        results += "Так" if cognitiveModel.check_numerical_stability() else "Ні"
-        results += "\n"
-
-        results += "Структурна стійкість: "
-        cycles = cognitiveModel.check_structural_stability()
-        if not cycles:
-            results += "Так"
         else:
-            results += "Ні, отримали наступні цикли: \n"
-            for cycle in cycles:
-                results += "(" + self.cycle_str(cycle) + ") \n"
-        cognitiveModel.impulse_model()
-        self.label.setText(results)
+            cognitiveModel = CognitiveModel(A)
+            results = "Власні числа: \n"
+            results += "\n".join(str(x) for x in cognitiveModel.calculate_eigenvalues())
+            results += "\n"
+
+            results += "Стійкість за збуренням: "
+            results += "Так" if cognitiveModel.check_perturbation_stability() else "Ні"
+            results += "\n"
+
+            results += "Стійкість за значенням: "
+            results += "Так" if cognitiveModel.check_numerical_stability() else "Ні"
+            results += "\n"
+
+            results += "Структурна стійкість: "
+            cycles = cognitiveModel.check_structural_stability()
+            if not cycles:
+                results += "Так"
+            else:
+                results += "Ні, отримали наступні цикли: \n"
+                for cycle in cycles:
+                    results += "(" + self.cycle_str(cycle) + ") \n"
+            t = 5
+            try:
+                q = [1, 0, 0, 0, 0, 0, 0, 0]
+                cognitiveModel.impulse_model(t=t, q=q)
+                q = [0, 1, 0, 0, 0, 0, 0, 0]
+                cognitiveModel.impulse_model(t=t, q=q)
+                q = [0, 1, 1, 0, 0, 0, 0, 0]
+                cognitiveModel.impulse_model(t=t, q=q)
+                q = [0, 1, 0, 0, 0, 1, 0, 0]
+                cognitiveModel.impulse_model(t=t, q=q)
+            except ValueError:
+                QMessageBox.warning(self, "Error", "Для імпульсного моделювання необхідна розмірність 8")
+            self.label.setText(results)
 
     @pyqtSlot()
     def openClicked(self) -> NoReturn:

@@ -69,13 +69,18 @@ class CognitiveModel:
         plt.title("Когнітивна карта")
         plt.show()
 
-    def impulse_model(self, t: int = 50) -> NoReturn:
+    def impulse_model(self, t: int = 5, q: Optional[np.ndarray] = None) -> NoReturn:
         rcParams["figure.figsize"] = 7, 5
         x_0 = np.zeros((self.adjacency_matrix.shape[0], 1))
         init_q = x_0.copy()
         x_list = [x_0, x_0]
-        q = init_q.copy()
-        q[0] = 1
+        if q is None:
+            q = init_q.copy()
+            q[1] = 1
+        else:
+            q = np.array(q).reshape(-1, 1)
+        save_q = q.copy()
+
         for _ in range(t):
             x_next = x_list[-1] + np.dot(self.adjacency_matrix, (x_list[-1] - x_list[-2])) + q
             x_list.append(x_next)
@@ -85,6 +90,8 @@ class CognitiveModel:
 
         for index in range(x_plot.shape[1]):
             plt.plot(range(t + 1), x_plot[:, index], label=f"V{index + 1}")
-        plt.title(f"Графік імпульсних процесів у вершинах внаслідок \n внесення збурення q1 = + 1")
+        plt.title(f"Графік імпульсних процесів у вершинах внаслідок \n внесення збурення q = {save_q.reshape(-1, )}")
+        plt.xlabel("Кроки")
+        plt.ylabel("x(t)")
         plt.legend()
         plt.show()
