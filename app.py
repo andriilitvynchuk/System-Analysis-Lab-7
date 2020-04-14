@@ -81,6 +81,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for cycle in cycles:
                     results += "(" + self.cycle_str(cycle) + ") \n"
             t = 5
+            print(A.shape)
             try:
                 q = [1, 0, 0, 0, 0, 0, 0, 0]
                 cognitiveModel.impulse_model(t=t, q=q)
@@ -91,7 +92,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 q = [0, 1, 0, 0, 0, 1, 0, 0]
                 cognitiveModel.impulse_model(t=t, q=q)
             except ValueError:
-                QMessageBox.warning(self, "Error", "Для імпульсного моделювання необхідна розмірність 8")
+                q = np.zeros(A.shape[0])
+                for index in range(max([1, A.shape[0] // 2 + 1])):
+                    q[index] = 1
+                    cognitiveModel.impulse_model(t=t, q=q)
+                    q[index] = 0
+                # QMessageBox.warning(self, "Error", "Для імпульсного моделювання необхідна розмірність 8")
             self.label.setText(results)
 
     @pyqtSlot()
@@ -151,9 +157,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         c = k.column()
         self.tableWidget.removeColumn(c)
         self.tableWidget.removeRow(c)
-        if r != c:
-            self.tableWidget.removeColumn(r)
-            self.tableWidget.removeRow(r)
+        # if r != c:
+        #     self.tableWidget.removeColumn(r)
+        #     self.tableWidget.removeRow(r)
 
         self.tableWidget.resizeColumnsToContents()
 
