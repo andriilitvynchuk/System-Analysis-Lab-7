@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
     QAbstractItemView,
     QApplication,
     QGridLayout,
+    QLabel,
     QLineEdit,
     QPushButton,
     QTableWidget,
@@ -39,7 +40,7 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow: Any, col_count: int, row_count: int, default_adj_matrix: np.ndarray) -> NoReturn:
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(1024, 600)
+        MainWindow.resize(1024, 750)
 
         self.centralWidget = QWidget(MainWindow)
         self.centralWidget.setObjectName(_fromUtf8("centralWidget"))
@@ -86,7 +87,7 @@ class Ui_MainWindow(object):
         self.label = QTextBrowser(self.centralWidget)
         self.label.setAutoFillBackground(True)
         self.label.setMinimumSize(QtCore.QSize(0, 270))
-        self.label.setMaximumSize(QtCore.QSize(16777215, 250))
+        self.label.setMaximumSize(QtCore.QSize(16777215, 200))
         self.label.setAlignment(QtCore.Qt.AlignLeft)
         self.label.setObjectName(_fromUtf8("label"))
         self.gridLayout.addWidget(self.label, 6, 1, 1, 1)
@@ -100,6 +101,12 @@ class Ui_MainWindow(object):
         self.removeButton = QPushButton(self.centralWidget)
         self.removeButton.setObjectName(_fromUtf8("removeButton"))
         self.gridLayout.addWidget(self.removeButton, 4, 0, 1, 1)
+        self.tLabel = QLabel("                          Т")
+        self.gridLayout.addWidget(self.tLabel, 5, 0, 1, 1)
+        self.tLine = QLineEdit()
+        self.tLine.setText("5")
+        self.tLine.setFixedWidth(100)
+        self.gridLayout.addWidget(self.tLine, 5, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralWidget)
 
         self.retranslateUi(MainWindow, col_count, row_count, default_adj_matrix)

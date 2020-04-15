@@ -82,7 +82,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 results += "Ні, отримали наступні цикли: \n"
                 for cycle in cycles:
                     results += "(" + self.cycle_str(cycle) + ") \n"
-            t = 5
+            try:
+                t = int(self.tLine.text())
+            except ValueError:
+                QMessageBox.warning(self, "Error", "Введіть ціле значення кількості тактів")
             cognitiveModel.impulse_model(t=t, q=q)
 
             # print(A.shape)
