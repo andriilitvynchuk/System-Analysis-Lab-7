@@ -43,7 +43,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     @pyqtSlot()
     def buildClicked(self) -> NoReturn:
-        A = self.get_A()
+        A = self.get_A()[:, :-1]
         if A is None:
             QMessageBox.warning(self, "Error", "Error parsing matrix")
         else:
@@ -59,6 +59,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if A is None:
             QMessageBox.warning(self, "Error", "Error parsing matrix")
         else:
+            q = A[:, -1]
+            A = A[:, :-1]
             cognitiveModel = CognitiveModel(A)
             results = "Власні числа: \n"
             results += "\n".join(str(x) for x in cognitiveModel.calculate_eigenvalues())
@@ -81,23 +83,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for cycle in cycles:
                     results += "(" + self.cycle_str(cycle) + ") \n"
             t = 5
-            print(A.shape)
-            try:
-                q = [1, 0, 0, 0, 0, 0, 0, 0]
-                cognitiveModel.impulse_model(t=t, q=q)
-                q = [0, 1, 0, 0, 0, 0, 0, 0]
-                cognitiveModel.impulse_model(t=t, q=q)
-                q = [0, 1, 1, 0, 0, 0, 0, 0]
-                cognitiveModel.impulse_model(t=t, q=q)
-                q = [0, 1, 0, 0, 0, 1, 0, 0]
-                cognitiveModel.impulse_model(t=t, q=q)
-            except ValueError:
-                q = np.zeros(A.shape[0])
-                for index in range(max([1, A.shape[0] // 2 + 1])):
-                    q[index] = 1
-                    cognitiveModel.impulse_model(t=t, q=q)
-                    q[index] = 0
-                # QMessageBox.warning(self, "Error", "Для імпульсного моделювання необхідна розмірність 8")
+            cognitiveModel.impulse_model(t=t, q=q)
+
+            # print(A.shape)
+            # try:
+            #     q = [1, 0, 0, 0, 0, 0, 0, 0]
+            #     cognitiveModel.impulse_model(t=t, q=q)
+            #     q = [0, 1, 0, 0, 0, 0, 0, 0]
+            #     cognitiveModel.impulse_model(t=t, q=q)
+            #     q = [0, 1, 1, 0, 0, 0, 0, 0]
+            #     cognitiveModel.impulse_model(t=t, q=q)
+            #     q = [0, 1, 0, 0, 0, 1, 0, 0]
+            #     cognitiveModel.impulse_model(t=t, q=q)
+            # except ValueError:
+            #     q = np.zeros(A.shape[0])
+            #     for index in range(max([1, A.shape[0] // 2 + 1])):
+            #         q[index] = 1
+            #         cognitiveModel.impulse_model(t=t, q=q)
+            #         q[index] = 0
+            #     # QMessageBox.warning(self, "Error", "Для імпульсного моделювання необхідна розмірність 8")
             self.label.setText(results)
 
     @pyqtSlot()
@@ -109,7 +113,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.tableWidget.clear()
 
             self.tableWidget.setCornerButtonEnabled(False)
-            self.tableWidget.setColumnCount(len(df))
+            self.tableWidget.setColumnCount(len(df) + 1)
             self.tableWidget.setRowCount(len(df))
 
             self.tableWidget.setSortingEnabled(False)
@@ -122,12 +126,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 item = QTableWidgetItem()
                 self.tableWidget.setHorizontalHeaderItem(i, item)
+                item.setText(_translate("MainWindow", str(i + 1), None))
+
+            # IMPULSE
+            item = QTableWidgetItem()
+            self.tableWidget.setHorizontalHeaderItem(len(df), item)
+            item.setText(_translate("MainWindow", "Імпульс q", None))
 
             for i in range(len(df)):
                 for j in range(len(df)):
                     item = QTableWidgetItem()
                     item.setText(_translate("MainWindow", str(df[i, j]), None))
                     self.tableWidget.setItem(i, j, item)
+
+            # IMPULSE
+            for i in range(len(df)):
+                item = QTableWidgetItem()
+                item.setText(_translate("MainWindow", "0", None))
+                self.tableWidget.setItem(i, len(df), item)
 
             self.tableWidget.resizeColumnsToContents()
 
@@ -136,32 +152,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         name = str(self.tableWidget.rowCount() + 1)
         r = self.tableWidget.rowCount()
-        self.tableWidget.setColumnCount(r + 1)
+        self.tableWidget.setColumnCount(r + 2)
         self.tableWidget.setRowCount(r + 1)
         self.tableWidget.setHorizontalHeaderItem(r, QTableWidgetItem(name))
+        self.tableWidget.setHorizontalHeaderItem(r + 1, QTableWidgetItem("Імпульс q"))
         self.tableWidget.setVerticalHeaderItem(r, QTableWidgetItem(name))
+
+        # IMPULSE
+        for i in range(r):
+            item = self.tableWidget.item(i, r).text()
+            self.tableWidget.setItem(i, r + 1, QTableWidgetItem(item))
 
         for i in range(r + 1):
             item = "0.0"
             self.tableWidget.setItem(i, r, QTableWidgetItem(item))
             self.tableWidget.setItem(r, i, QTableWidgetItem(item))
 
+        self.tableWidget.setItem(r, r + 1, QTableWidgetItem("0"))
         self.tableWidget.resizeColumnsToContents()
 
     @pyqtSlot()
     def removeClicked(self) -> NoReturn:
         selected_items = self.tableWidget.selectedItems()
-
-        k = selected_items[0]
-        r = k.row()
-        c = k.column()
-        self.tableWidget.removeColumn(c)
-        self.tableWidget.removeRow(c)
-        # if r != c:
-        #     self.tableWidget.removeColumn(r)
-        #     self.tableWidget.removeRow(r)
-
-        self.tableWidget.resizeColumnsToContents()
+        try:
+            k = selected_items[0]
+            r = k.row()
+            c = k.column()
+            if self.tableWidget.horizontalHeaderItem(c).text() != "Імпульс q":
+                self.tableWidget.removeColumn(c)
+                self.tableWidget.removeRow(c)
+                self.tableWidget.resizeColumnsToContents()
+        except IndexError:
+            QMessageBox.warning(self, "Error", "Виділіть стовпчик, який хочете видалити")
 
 
 def main() -> NoReturn:

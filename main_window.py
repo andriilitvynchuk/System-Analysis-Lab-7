@@ -52,19 +52,19 @@ class Ui_MainWindow(object):
         self.tableWidget.setCornerButtonEnabled(False)
         self.tableWidget.setObjectName(_fromUtf8("tableWidget"))
 
-        self.tableWidget.setColumnCount(col_count)
+        self.tableWidget.setColumnCount(col_count + 1)
         self.tableWidget.setRowCount(row_count)
 
         for index in range(row_count):
             item = QTableWidgetItem()
             self.tableWidget.setVerticalHeaderItem(index, item)
 
-        for index in range(col_count):
+        for index in range(col_count + 1):
             item = QTableWidgetItem()
             self.tableWidget.setHorizontalHeaderItem(index, item)
 
         for index_i in range(row_count):
-            for index_j in range(col_count):
+            for index_j in range(col_count + 1):
                 item = QTableWidgetItem()
                 self.tableWidget.setItem(index_i, index_j, item)
 
@@ -123,12 +123,21 @@ class Ui_MainWindow(object):
             item = self.tableWidget.horizontalHeaderItem(index)
             item.setText(_translate("MainWindow", f"{index + 1}", None))
 
+        # IMPULSE
+        item = self.tableWidget.horizontalHeaderItem(col_count)
+        item.setText(_translate("MainWindow", "Імпульс q", None))
+
         __sortingEnabled = self.tableWidget.isSortingEnabled()
         self.tableWidget.setSortingEnabled(False)
         for index_i in range(row_count):
             for index_j in range(col_count):
                 item = self.tableWidget.item(index_i, index_j)
                 item.setText(_translate("MainWindow", str(default_adj_matrix[index_i, index_j]), None))
+
+        # IMPULSE
+        for index_i in range(row_count):
+            item = self.tableWidget.item(index_i, col_count)
+            item.setText(_translate("MainWindow", "0", None))
 
         self.tableWidget.setSortingEnabled(__sortingEnabled)
         self.openButton.setText(_translate("MainWindow", "Відкрити файл", None))
